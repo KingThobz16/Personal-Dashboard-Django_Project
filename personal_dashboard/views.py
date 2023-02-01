@@ -5,6 +5,8 @@ from django.views import generic
 from youtubesearchpython import VideosSearch
 import requests
 import wikipedia
+from django.contrib.auth.decorators import login_required
+
 
 # Create your views here.
 def home(request):
@@ -16,6 +18,7 @@ def home(request):
 # 
 """Notes related views"""
 # Note creating View
+@login_required
 def notes(request):
     # Check if the request is post and create note
     if request.method == ('POST'):
@@ -45,6 +48,7 @@ class NotesDetailView(generic.DetailView):
     
 
 # Note deleting view
+@login_required
 def delete_note(request, pk=None):
     # In the Notes database table, delete the note with the id=pk
     Notes.objects.get(id=pk).delete()
@@ -60,6 +64,7 @@ def delete_note(request, pk=None):
 # 
 """Homework related views"""
 # Homework view
+@login_required
 def homework(request):
     # Check if the request is post and create homework
     if request.method == "POST":
@@ -105,6 +110,7 @@ def homework(request):
 
 
 # To update homework and mark it finished or not finished
+@login_required
 def update_homework(request, pk=None):
     homework = Homework.objects.get(id=pk)
     if homework.is_finished == True:
@@ -118,6 +124,7 @@ def update_homework(request, pk=None):
     
     
 # Delete homework view
+@login_required
 def delete_homework(request, pk=None):
     Homework.objects.get(id=pk).delete()
     return redirect('personal_dashboard-homework')
@@ -185,6 +192,7 @@ def youtube(request):
 # 
 """todo related views"""
 # todo creating view
+@login_required
 def todo(request):
     if request.method == "POST":
         form = TodoForm(request.POST)
@@ -223,6 +231,7 @@ def todo(request):
     return render(request, 'personal_dashboard/todo.html', context)
 
 # To update homework and mark it finished or not finished
+@login_required
 def update_todo(request,pk=None):
     todo = Todo.objects.get(id=pk)
     if todo.is_finished == True:
@@ -234,6 +243,7 @@ def update_todo(request,pk=None):
     return redirect('personal_dashboard-todo')
 
 # Delete todo view
+@login_required
 def delete_todo(request, pk=None):
     Todo.objects.get(id=pk).delete()
     return redirect('personal_dashboard-todo')
@@ -445,3 +455,52 @@ def conversion(request):
         }
     
     return render(request, 'personal_dashboard/conversion.html', context)
+
+# 
+# 
+# 
+# 
+# 
+# Registration View
+def register(request):
+    if request.method == "POST":
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f"Account created for {username}!!")
+            return redirect('login')
+    else:
+        form = UserRegistrationForm()
+        
+    context = {
+        'form' : form
+    }
+    return render(request, 'personal_dashboard/register.html', context)
+
+# 
+# 
+# 
+# 
+# 
+# Profile View
+@login_required
+def profile(request):
+    homeworks = Homework.objects.filter(is_finished=False, user=request.user)
+    todos = Todo.objects.filter(is_finished=False, user=request.user)
+    if len(homeworks) == 0:
+        homework_done = True
+    else:
+        homework_done = False
+        
+    if len(todos) == 0:
+        todos_done = True
+    else:
+        todos_done = False
+    context = {
+        'homeworks' : homeworks,
+        'todos' : todos,
+        'homework_done' : homework_done,
+        'todos_done' : todos_done
+    }
+    return render(request, 'personal_dashboard/profile.html', context)

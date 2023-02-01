@@ -1,5 +1,6 @@
 from django import forms
 from . models import *
+from django.contrib.auth.forms import UserCreationForm
 
 class NotesForm(forms.ModelForm):
     class Meta:
@@ -70,3 +71,9 @@ class ConversionMassForm(forms.Form):
         label = '', widget=forms.Select(choices = CHOICES)
     )
     
+# User registration form, which inherits from the django user creation form
+class UserRegistrationForm(UserCreationForm):
+    class Meta:
+        model = User
+        # Fields to display
+        fields = ['username', 'password1', 'password2']
